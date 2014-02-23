@@ -11,7 +11,7 @@ A simple GET:
 ```js
 var url  = 'https://api.github.com/users/rvagg'
   , opts = { headers: { 'user-agent': 'yee haw grandma' } }
-  , fn   = function (err, data) {
+  , fn   = function (err, data, resp) {
       console.log(data)
     }
 
@@ -36,7 +36,7 @@ var url  = 'https://api.github.com/repos/rvagg/jsonist/issues'
         'title' : 'Not a bug'
       , 'body'  : 'Just guinea-pigging your repo dude, move along.'
     }
-  , fn   = function (err, data) {
+  , fn   = function (err, data, resp) {
       console.log(data)
     }
 
@@ -56,6 +56,8 @@ jsonist.post(url, data, opts, fn)
 Send a GET request to `url` and return the callback with an error or JSON deserialised data.
 
 The `options` object is optional and is passed on to hyperquest.
+
+The callback is called with up to 3 arguments. If there is an error there will only be an error argument in the first position, otherwise it will be `null`. The second argument will contain the deserialised object obtained from the server and the third argument will be the response object itself if you need to fetch headers or other metadata.
 
 ### jsonist.post(url, data, [ options, ] callback)
 

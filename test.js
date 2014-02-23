@@ -35,15 +35,20 @@ function testServer (data) {
 
 
 test('fetch json doc', function (t) {
-  t.plan(5)
+  t.plan(7)
 
   var testDoc = { a: 'test', doc: true, arr: [ { of: 'things' } ] }
 
   testServer(JSON.stringify(testDoc))
     .on('ready', function (url) {
-      jsonist.get(url, function (err, data) {
+      jsonist.get(url, function (err, data, response) {
         t.notOk(err, 'no error')
         t.deepEqual(data, testDoc, 'got correct doc')
+        t.ok(response, 'got response object')
+        t.equal(
+            response && response.headers && response.headers['content-type']
+          , 'application/json', 'verified response object by content-type header'
+        )
       })
     })
     .on('request', function (req, data) {
@@ -54,13 +59,14 @@ test('fetch json doc', function (t) {
 })
 
 test('fetch non-json doc', function (t) {
-  t.plan(6)
+  t.plan(7)
 
   testServer('this is not json')
     .on('ready', function (url) {
-      jsonist.get(url, function (err, data) {
+      jsonist.get(url, function (err, data, response) {
         t.ok(err, 'got error')
         t.notOk(data, 'no data')
+        t.notOk(response, 'no response obj')
         t.ok(/JSON/.test(err.message), 'error says something about "JSON"')
       })
     })
@@ -73,15 +79,20 @@ test('fetch non-json doc', function (t) {
 
 'post put'.split(' ').forEach(function (type) {
   test(type + ' json, no response', function (t) {
-    t.plan(7)
+    t.plan(9)
 
     var testDoc = { a: 'test2', doc: true, arr: [ { of: 'things' } ] }
 
     testServer('')
       .on('ready', function (url) {
-        jsonist[type](url, xtend(testDoc), function (err, data) {
+        jsonist[type](url, xtend(testDoc), function (err, data, response) {
           t.notOk(err, 'no error')
           t.notOk(data, 'no data')
+          t.ok(response, 'got response object')
+          t.equal(
+              response && response.headers && response.headers['content-type']
+            , 'application/json', 'verified response object by content-type header'
+          )
         })
       })
       .on('request', function (req, data) {
@@ -94,16 +105,21 @@ test('fetch non-json doc', function (t) {
   })
 
   test(type + ' json, with response', function (t) {
-    t.plan(7)
+    t.plan(9)
 
     var sendDoc = { a: 'test2', doc: true, arr: [ { of: 'things' } ] }
       , recvDoc = { recv: 'this', obj: true }
 
     testServer(JSON.stringify(recvDoc))
       .on('ready', function (url) {
-        jsonist[type](url, xtend(sendDoc), function (err, data) {
+        jsonist[type](url, xtend(sendDoc), function (err, data, response) {
           t.notOk(err, 'no error')
           t.deepEqual(data, recvDoc)
+          t.ok(response, 'got response object')
+          t.equal(
+              response && response.headers && response.headers['content-type']
+            , 'application/json', 'verified response object by content-type header'
+          )
         })
       })
       .on('request', function (req, data) {

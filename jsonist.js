@@ -3,13 +3,13 @@ const hyperquest = require('hyperquest')
     , stringify  = require('json-stringify-safe')
 
 
-function collector (callback) {
-  return bl(function (err, data) {
+function collector (request, callback) {
+  request.pipe(bl(function (err, data) {
     if (err)
       return callback(err)
 
     if (!data.length)
-      return callback(null, null)
+      return callback(null, null, request.response)
 
     var ret
 
@@ -21,8 +21,8 @@ function collector (callback) {
       return callback(err)
     }
 
-    callback(null, ret)
-  })
+    callback(null, ret, request.response)
+  }))
 }
 
 
@@ -46,7 +46,7 @@ function makeMethod (method, data) {
       options.headers['accept'] = 'application/json'
 
     var request = (options.hyperquest || hyperquest)(url, options)
-    request.pipe(collector(callback))
+    collector(request, callback)
 
     return request
   }
