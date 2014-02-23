@@ -61,7 +61,7 @@ The `options` object is optional and is passed on to hyperquest.
 
 Send a POST request to `url`, writing JSON serialised data to the request, and return the callback with an error or JSON deserialised data (if any).
 
-`'method'` is set to `'PUT'` for you before passing on to hyperquest.
+`'method'` is set to `'POST'` for you before passing on to hyperquest.
 
 The `options` object is optional and is passed on to hyperquest.
 
