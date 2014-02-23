@@ -1,0 +1,37 @@
+{
+  "name": "jsonist",
+  "version": "0.0.0",
+  "description": "A simple wrapper around for dealing with JSON web APIs",
+  "main": "jsonist.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rvagg/jsonist.git"
+  },
+  "keywords": [
+    "http",
+    "hyperquest",
+    "json",
+    "hungry hungry http hippo!"
+  ],
+  "author": "Rod Vagg <r@va.gg>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rvagg/jsonist/issues"
+  },
+  "peerDependencies": {
+    "hyperquest": "^0.2.0"
+  },
+  "dependencies": {
+    "bl": "^0.7.0",
+    "json-stringify-safe": "~5.0.0"
+  },
+  "homepage": "https://github.com/rvagg/jsonist",
+  "devDependencies": {
+    "tape": "^2.4.2",
+    "xtend": "^2.1.2",
+    "hyperquest": "^0.2.0"
+  }
+}
