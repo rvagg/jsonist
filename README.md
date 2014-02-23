@@ -1,6 +1,10 @@
 # jsonist
 
+[![Build Status](https://secure.travis-ci.org/rvagg/jsonist.png)](http://travis-ci.org/rvagg/jsonist)
+
 **JSON over HTTP**: A simple wrapper around [hyperquest](https://github.com/substack/hyperquest) for dealing with JSON web APIs.
+
+[![NPM](https://nodei.co/npm/jsonist.svg)](https://nodei.co/npm/jsonist/)
 
 A simple GET:
 
