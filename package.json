@@ -21,17 +21,14 @@
   "bugs": {
     "url": "https://github.com/rvagg/jsonist/issues"
   },
-  "peerDependencies": {
-    "hyperquest": "^0.2.0"
-  },
   "dependencies": {
     "bl": "^0.7.0",
-    "json-stringify-safe": "~5.0.0"
+    "json-stringify-safe": "~5.0.0",
+    "hyperquest": "~0.3.0"
   },
   "homepage": "https://github.com/rvagg/jsonist",
   "devDependencies": {
-    "tape": "^2.4.2",
-    "xtend": "^2.1.2",
-    "hyperquest": "^0.2.0"
+    "tape": "~2.4.2",
+    "xtend": "~2.1.2"
   }
 }
