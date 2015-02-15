@@ -18,7 +18,7 @@ function collector (request, callback) {
     } catch (e) {
       var err = new SyntaxError('JSON parse error: ' + e.message, e)
       err.data = data
-      return callback(err)
+      return callback(err, data, request.response)
     }
 
     callback(null, ret, request.response)
