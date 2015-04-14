@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "bl": "~0.9.4",
-    "hyperquest": "~1.0.1",
+    "hyperquest": "~1.2.0",
     "json-stringify-safe": "~5.0.0"
   },
   "homepage": "https://github.com/rvagg/jsonist",
