@@ -1,4 +1,4 @@
-const hyperquest = require('hyperquest')
+var hyperquest = require('hyperquest')
     , bl         = require('bl')
     , stringify  = require('json-stringify-safe')
 
