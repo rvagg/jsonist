@@ -1,6 +1,6 @@
-const hyperquest = require('hyperquest')
-    , bl         = require('bl')
-    , stringify  = require('json-stringify-safe')
+var hyperquest = require('hyperquest')
+  , bl         = require('bl')
+  , stringify  = require('json-stringify-safe')
 
 
 function collector (request, callback) {
