@@ -53,7 +53,11 @@ function makeMethod (method, data) {
   }
 
   function dataHandler (url, data, options, callback) {
-    return handler(url, options, callback).end(stringify(data))
+    var request = handler(url, options, callback)
+    if (typeof data.pipe == 'function')
+      data.pipe(request)
+    else
+      request.end(stringify(data))
   }
 
   return data ? dataHandler : handler
