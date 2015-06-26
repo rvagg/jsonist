@@ -65,6 +65,8 @@ Send a POST request to `url`, writing JSON serialised data to the request, and r
 
 `'method'` is set to `'POST'` for you before passing on to hyperquest.
 
+The `data` parameter can also be a readable stream that will get `.pipe()`'d to the request.
+
 The `options` object is optional and is passed on to hyperquest.
 
 ### jsonist.put(url, data, [ options, ] callback)
