@@ -67,7 +67,7 @@ Send a POST request to `url`, writing JSON serialised data to the request, and r
 
 The `options` object is optional and is passed on to hyperquest.
 
-### jsonist.put(url, [ options, ] callback)
+### jsonist.put(url, data, [ options, ] callback)
 
 Same as  `jsonist.post()` but for when that extra character is too much to type or you have to use someone's overloaded API. `'method'` is set to `'PUT'`.
 
