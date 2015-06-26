@@ -58,6 +58,7 @@ function makeMethod (method, data) {
       data.pipe(request)
     else
       request.end(stringify(data))
+    return request
   }
 
   return data ? dataHandler : handler
