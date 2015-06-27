@@ -1,12 +1,14 @@
-const test    = require('tape')
-    , http    = require('http')
-    , bl      = require('bl')
-    , xtend   = require('xtend')
-    , EE      = require('events').EventEmitter
-    , jsonist = require('./')
+const test      = require('tape')
+    , http      = require('http')
+    , fs        = require('fs')
+    , bl        = require('bl')
+    , xtend     = require('xtend')
+    , EE        = require('events').EventEmitter
+    , jsonist   = require('./')
+    , stringify = require('json-stringify-safe')
 
 
-function testServer (data) {
+function testServer (serverResponse) {
   var ee     = new EE()
     , server = http.createServer(handler)
 
@@ -21,7 +23,7 @@ function testServer (data) {
     }))
 
     res.writeHead(200, { 'content-type': 'application/json' })
-    res.end(data || '')
+    res.end(serverResponse || '')
   }
 
   server.listen(function () {
@@ -127,6 +129,104 @@ test('fetch non-json doc', function (t) {
         t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
         t.equal(req.headers['content-type'], 'application/json', 'got correct encoding')
         t.deepEqual(JSON.parse(data), sendDoc, 'got correct ' + type)
+      })
+      .on('close', t.ok.bind(t, true, 'ended'))
+  })
+
+  test(type + ' data with no pipe function treated as data', function (t) {
+    t.plan(9)
+
+    var sendDoc = {
+            a    : 'test2'
+          , doc  : true
+          , arr  : [ { of: 'things' } ]
+          , pipe : 'this is a string and not a function'
+        }
+      , recvDoc = { recv: 'this', obj: true }
+
+    testServer(JSON.stringify(recvDoc))
+      .on('ready', function (url) {
+        jsonist[type](url, xtend(sendDoc), function (err, data, response) {
+          t.notOk(err, 'no error')
+          t.deepEqual(data, recvDoc)
+          t.ok(response, 'got response object')
+          t.equal(
+              response && response.headers && response.headers['content-type']
+            , 'application/json', 'verified response object by content-type header'
+          )
+        })
+      })
+      .on('request', function (req, data) {
+        t.equal(req.method, type.toUpperCase(), 'got ' + type + ' request')
+        t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
+        t.equal(req.headers['content-type'], 'application/json', 'got correct encoding')
+        t.deepEqual(JSON.parse(data), sendDoc, 'got correct ' + type)
+      })
+      .on('close', t.ok.bind(t, true, 'ended'))
+  })
+
+  test(type + ' data with pipe function will data.pipe(req)', function (t) {
+    t.plan(10)
+
+    var sendDoc = {
+            a    : 'test2'
+          , doc  : true
+          , arr  : [ { of: 'things' } ]
+        }
+      , stream = {
+          pipe: function (req) {
+            t.ok(req, 'request should be set')
+            req.end(stringify(sendDoc))
+          }
+        }
+      , recvDoc = { recv: 'this', obj: true }
+
+    testServer(JSON.stringify(recvDoc))
+      .on('ready', function (url) {
+        jsonist[type](url, stream, function (err, data, response) {
+          t.notOk(err, 'no error')
+          t.deepEqual(data, recvDoc)
+          t.ok(response, 'got response object')
+          t.equal(
+              response && response.headers && response.headers['content-type']
+            , 'application/json', 'verified response object by content-type header'
+          )
+        })
+      })
+      .on('request', function (req, data) {
+        t.equal(req.method, type.toUpperCase(), 'got ' + type + ' request')
+        t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
+        t.equal(req.headers['content-type'], 'application/json', 'got correct encoding')
+        t.deepEqual(JSON.parse(data), sendDoc, 'got correct ' + type)
+      })
+      .on('close', t.ok.bind(t, true, 'ended'))
+  })
+
+  test(type + ' data with pipe function and real stream works', function (t) {
+    t.plan(9)
+
+    var file    = __dirname + '/package.json'
+      , content = JSON.parse(fs.readFileSync(file))
+      , stream  = fs.createReadStream(file)
+      , recvDoc = { recv: 'this', obj: true }
+
+    testServer(JSON.stringify(recvDoc))
+      .on('ready', function (url) {
+        jsonist[type](url, stream, function (err, data, response) {
+          t.notOk(err, 'no error')
+          t.deepEqual(data, recvDoc)
+          t.ok(response, 'got response object')
+          t.equal(
+              response && response.headers && response.headers['content-type']
+            , 'application/json', 'verified response object by content-type header'
+          )
+        })
+      })
+      .on('request', function (req, data) {
+        t.equal(req.method, type.toUpperCase(), 'got ' + type + ' request')
+        t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
+        t.equal(req.headers['content-type'], 'application/json', 'got correct encoding')
+        t.deepEqual(JSON.parse(data), content, 'got correct ' + type)
       })
       .on('close', t.ok.bind(t, true, 'ended'))
   })

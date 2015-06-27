@@ -4,7 +4,7 @@
   "description": "A simple wrapper around for dealing with JSON web APIs",
   "main": "jsonist.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "node test.js | faucet"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/rvagg/jsonist",
   "devDependencies": {
+    "faucet": "0.0.1",
     "tape": "~3.5.0",
     "xtend": "~4.0.0"
   }
