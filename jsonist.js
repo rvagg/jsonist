@@ -3,6 +3,16 @@ var hyperquest = require('hyperquest')
   , stringify  = require('json-stringify-safe')
 
 
+function HttpError(status, request) {
+    this.status = status;
+    this.request = request;
+    Error.captureStackTrace(this, HttpError)
+}
+
+HttpError.prototype = Object.create(Error.prototype);
+HttpError.prototype.constructor = HttpError;
+
+
 function collector (request, callback) {
   request.pipe(bl(function (err, data) {
     if (err)
@@ -16,10 +26,15 @@ function collector (request, callback) {
     try {
       ret = JSON.parse(data.toString())
     } catch (e) {
-      var err = new SyntaxError('JSON parse error: ' + e.message, e)
-      err.data = data
-      err.response = request.response
-      return callback(err)
+        if(request.response.statusCode >= 300) {
+            var httpError = new HttpError(request.response.statusCode, request)
+            return callback(httpError);
+        } else {
+            var err2 = new SyntaxError('JSON parse error: ' + e.message, e)
+            err2.data = data
+            err2.response = request.response
+            return callback(err2)
+        }
     }
 
     callback(null, ret, request.response)
@@ -68,3 +83,4 @@ function makeMethod (method, data) {
 module.exports.get  = makeMethod('GET'  , false)
 module.exports.post = makeMethod('POST' , true)
 module.exports.put  = makeMethod('PUT'  , true)
+module.exports.HttpError = HttpError;
