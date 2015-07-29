@@ -5,6 +5,17 @@ var url         = require('url')
   , xtend       = require('xtend')
 
 
+function HttpError (status, response) {
+    Error.call(this)
+    this.status = status
+    this.response = response
+    Error.captureStackTrace(this, arguments.callee)
+}
+
+HttpError.prototype = Object.create(Error.prototype)
+HttpError.prototype.constructor = HttpError
+
+
 function collector (uri, options, callback) {
   var request       = makeRequest(uri, options)
     , redirect      = null
@@ -39,10 +50,17 @@ function collector (uri, options, callback) {
       try {
         ret = JSON.parse(data.toString())
       } catch (e) {
-        var err = new SyntaxError('JSON parse error: ' + e.message, e)
-        err.data = data
-        err.response = request.response
-        return callback(err)
+        if (request.response.statusCode >= 300) {
+          err = new HttpError(request.response.statusCode, request.response)
+        } else {
+          err = new SyntaxError('JSON parse error: ' + e.message, e)
+          err.statusCode = request.response.statusCode
+          err.data = data
+          err.response = request.response
+          return callback(err2)
+        }
+
+        return callback(err);
       }
 
       callback(null, ret, request.response)
@@ -109,3 +127,4 @@ module.exports.get    = makeMethod('GET'    , false)
 module.exports.post   = makeMethod('POST'   , true)
 module.exports.put    = makeMethod('PUT'    , true)
 module.exports.delete = makeMethod('DELETE' , false)
+module.exports.HttpError = HttpError
