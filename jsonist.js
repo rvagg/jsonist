@@ -3,14 +3,15 @@ var hyperquest = require('hyperquest')
   , stringify  = require('json-stringify-safe')
 
 
-function HttpError(status, request) {
-    this.status = status;
-    this.request = request;
-    Error.captureStackTrace(this, HttpError)
+function HttpError (status, request) {
+    Error.call(this)
+    this.status = status
+    this.request = request
+    Error.captureStackTrace(this, arguments.callee)
 }
 
-HttpError.prototype = Object.create(Error.prototype);
-HttpError.prototype.constructor = HttpError;
+HttpError.prototype = Object.create(Error.prototype)
+HttpError.prototype.constructor = HttpError
 
 
 function collector (request, callback) {
@@ -26,7 +27,7 @@ function collector (request, callback) {
     try {
       ret = JSON.parse(data.toString())
     } catch (e) {
-        if(request.response.statusCode >= 300) {
+        if (request.response.statusCode >= 300) {
             var httpError = new HttpError(request.response.statusCode, request)
             return callback(httpError);
         } else {
@@ -83,4 +84,5 @@ function makeMethod (method, data) {
 module.exports.get  = makeMethod('GET'  , false)
 module.exports.post = makeMethod('POST' , true)
 module.exports.put  = makeMethod('PUT'  , true)
-module.exports.HttpError = HttpError;
+module.exports.HttpError = HttpError
+
