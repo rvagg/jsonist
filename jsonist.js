@@ -3,10 +3,10 @@ var hyperquest = require('hyperquest')
   , stringify  = require('json-stringify-safe')
 
 
-function HttpError (status, request) {
+function HttpError (status, response) {
     Error.call(this)
     this.status = status
-    this.request = request
+    this.response = response
     Error.captureStackTrace(this, arguments.callee)
 }
 
@@ -28,7 +28,7 @@ function collector (request, callback) {
       ret = JSON.parse(data.toString())
     } catch (e) {
         if (request.response.statusCode >= 300) {
-            var httpError = new HttpError(request.response.statusCode, request)
+            var httpError = new HttpError(request.response.statusCode, request.response)
             return callback(httpError);
         } else {
             var err2 = new SyntaxError('JSON parse error: ' + e.message, e)
@@ -85,4 +85,3 @@ module.exports.get  = makeMethod('GET'  , false)
 module.exports.post = makeMethod('POST' , true)
 module.exports.put  = makeMethod('PUT'  , true)
 module.exports.HttpError = HttpError
-
