@@ -1,38 +1,65 @@
-var hyperquest = require('hyperquest')
-  , bl         = require('bl')
-  , stringify  = require('json-stringify-safe')
+var url         = require('url')
+  , hyperquest  = require('hyperquest')
+  , bl          = require('bl')
+  , stringify   = require('json-stringify-safe')
+  , xtend       = require('xtend')
 
 
-function collector (request, callback) {
-  request.pipe(bl(function (err, data) {
-    if (err)
-      return callback(err)
+function collector (uri, options, callback) {
+  var request       = makeRequest(uri, options)
+    , redirect      = null
+    , redirectCount = 0
 
-    if (!data.length)
-      return callback(null, null, request.response)
+  return handle(request)
 
-    var ret
-
-    try {
-      ret = JSON.parse(data.toString())
-    } catch (e) {
-      var err = new SyntaxError('JSON parse error: ' + e.message, e)
-      err.data = data
-      err.response = request.response
-      return callback(err)
+  function handle (request) {
+    if (options.followRedirects) {
+      request.on('response', function (response) {
+        redirect = isRedirect(request.request, response) && response.headers.location
+      })
     }
 
-    callback(null, ret, request.response)
-  }))
+    request.pipe(bl(function (err, data) {
+      if (redirect) {
+        if (++redirectCount >= (typeof options.followRedirects == 'number' ? options.followRedirects : 10))
+          return callback(new Error('Response was redirected too many times (' + redirectCount + ')'))
+        request = makeRequest(url.resolve(uri, redirect), options)
+        redirect = null
+        return handle(request)
+      }
+
+      if (err)
+        return callback(err)
+
+      if (!data.length)
+        return callback(null, null, request.response)
+
+      var ret
+
+      try {
+        ret = JSON.parse(data.toString())
+      } catch (e) {
+        var err = new SyntaxError('JSON parse error: ' + e.message, e)
+        err.data = data
+        err.response = request.response
+        return callback(err)
+      }
+
+      callback(null, ret, request.response)
+    }))
+
+    return request
+  }
 }
 
 
 function makeMethod (method, data) {
-  function handler (url, options, callback) {
+  function handler (uri, options, callback) {
     if (typeof options == 'function') {
       callback = options
       options = {}
-    }
+    } else
+      options = xtend(options, {})
 
     if (!options.method)
       options.method = method
@@ -46,14 +73,11 @@ function makeMethod (method, data) {
     if (!options.headers['accept'])
       options.headers['accept'] = 'application/json'
 
-    var request = (options.hyperquest || hyperquest)(url, options)
-    collector(request, callback)
-
-    return request
+    return collector(uri, options, callback)
   }
 
-  function dataHandler (url, data, options, callback) {
-    var request = handler(url, options, callback)
+  function dataHandler (uri, data, options, callback) {
+    var request = handler(uri, options, callback)
     if (typeof data.pipe == 'function')
       data.pipe(request)
     else
@@ -62,6 +86,22 @@ function makeMethod (method, data) {
   }
 
   return data ? dataHandler : handler
+}
+
+
+function makeRequest (uri, options) {
+  return (options.hyperquest || hyperquest)(uri, options)
+}
+
+
+function isRedirect (request, response) {
+  return request.method === 'GET' &&
+         response.headers.location &&
+         (    response.statusCode === 301
+           || response.statusCode === 302
+           || response.statusCode === 307
+           || response.statusCode === 308
+         )
 }
 
 

@@ -6,6 +6,7 @@ const test      = require('tape')
     , EE        = require('events').EventEmitter
     , jsonist   = require('./')
     , stringify = require('json-stringify-safe')
+    , after     = require('after')
 
 
 function testServer (serverResponse) {
@@ -41,7 +42,7 @@ test('fetch json doc', function (t) {
 
   var testDoc = { a: 'test', doc: true, arr: [ { of: 'things' } ] }
 
-  testServer(JSON.stringify(testDoc))
+  testServer(stringify(testDoc))
     .on('ready', function (url) {
       jsonist.get(url, function (err, data, response) {
         t.notOk(err, 'no error')
@@ -112,7 +113,7 @@ test('fetch non-json doc', function (t) {
     var sendDoc = { a: 'test2', doc: true, arr: [ { of: 'things' } ] }
       , recvDoc = { recv: 'this', obj: true }
 
-    testServer(JSON.stringify(recvDoc))
+    testServer(stringify(recvDoc))
       .on('ready', function (url) {
         jsonist[type](url, xtend(sendDoc), function (err, data, response) {
           t.notOk(err, 'no error')
@@ -144,7 +145,7 @@ test('fetch non-json doc', function (t) {
         }
       , recvDoc = { recv: 'this', obj: true }
 
-    testServer(JSON.stringify(recvDoc))
+    testServer(stringify(recvDoc))
       .on('ready', function (url) {
         jsonist[type](url, xtend(sendDoc), function (err, data, response) {
           t.notOk(err, 'no error')
@@ -181,7 +182,7 @@ test('fetch non-json doc', function (t) {
         }
       , recvDoc = { recv: 'this', obj: true }
 
-    testServer(JSON.stringify(recvDoc))
+    testServer(stringify(recvDoc))
       .on('ready', function (url) {
         jsonist[type](url, stream, function (err, data, response) {
           t.notOk(err, 'no error')
@@ -210,7 +211,7 @@ test('fetch non-json doc', function (t) {
       , stream  = fs.createReadStream(file)
       , recvDoc = { recv: 'this', obj: true }
 
-    testServer(JSON.stringify(recvDoc))
+    testServer(stringify(recvDoc))
       .on('ready', function (url) {
         jsonist[type](url, stream, function (err, data, response) {
           t.notOk(err, 'no error')
@@ -229,5 +230,83 @@ test('fetch non-json doc', function (t) {
         t.deepEqual(JSON.parse(data), content, 'got correct ' + type)
       })
       .on('close', t.ok.bind(t, true, 'ended'))
+  })
+})
+
+
+test('follow redirect', function (t) {
+  t.plan(7)
+
+  var expectedResponse = { ok: 'foobar!' }
+    , server = http.createServer(function (req, res) {
+        if (req.url == '/') { // 2 requests come in here
+          t.ok('got /')
+          res.writeHead(302, { 'location': '/foobar' })
+          return res.end()
+        }
+        // one comes in here
+        t.equal(req.url, '/foobar', 'got /foobar')
+        res.writeHead(200, { 'content-type': 'application/json' })
+        res.end(stringify(expectedResponse))
+      })
+
+  server.listen(function () {
+    var port = server.address().port
+      , done = after(2, function () { server.close() })
+
+    jsonist.get('http://localhost:' + port, function (err, data) {
+      // don't follow redirect, don't get data
+      t.error(err, 'no error')
+      t.equal(data, null, 'no redirect, no data')
+      done()
+    })
+
+    jsonist.get('http://localhost:' + port, { followRedirects: true }, function (err, data) {
+      t.error(err, 'no error')
+      t.deepEqual(data, expectedResponse, 'redirect, got data')
+      done()
+    })
+  })
+})
+
+
+test('follow redirect limit', function (t) {
+  t.plan(6 + 10 + 5 + 10)
+
+  var expectedResponse = { ok: 'foobar!' }
+    , server = http.createServer(function (req, res) {
+        var m = +req.url.match(/^\/(\d+)/)[1]
+        if (m < 20) { // 2 requests come in here
+          t.ok('got /')
+          res.writeHead(302, { 'location': '/' + (m + 1) })
+          return res.end()
+        }
+        // one comes in here
+        t.equal(req.url, '/20', 'got /20')
+        res.writeHead(200, { 'content-type': 'application/json' })
+        res.end(stringify(expectedResponse))
+      })
+
+  server.listen(function () {
+    var port = server.address().port
+      , done = after(3, function () { server.close() })
+
+    jsonist.get('http://localhost:' + port + '/1', { followRedirects: true }, function (err, data) {
+      t.ok(err, 'got error')
+      t.equal(err.message, 'Response was redirected too many times (10)')
+      done()
+    })
+
+    jsonist.get('http://localhost:' + port + '/1', { followRedirects: 5 }, function (err, data) {
+      t.ok(err, 'got error')
+      t.equal(err.message, 'Response was redirected too many times (5)')
+      done()
+    })
+
+    jsonist.get('http://localhost:' + port + '/11', { followRedirects: true }, function (err, data) {
+      t.error(err, 'no error')
+      t.deepEqual(data, expectedResponse, 'redirect, got data')
+      done()
+    })
   })
 })

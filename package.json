@@ -22,14 +22,15 @@
     "url": "https://github.com/rvagg/jsonist/issues"
   },
   "dependencies": {
-    "bl": "~0.9.4",
+    "bl": "~1.0.0",
     "hyperquest": "~1.2.0",
-    "json-stringify-safe": "~5.0.0"
+    "json-stringify-safe": "~5.0.0",
+    "xtend": "~4.0.0"
   },
   "homepage": "https://github.com/rvagg/jsonist",
   "devDependencies": {
-    "faucet": "0.0.1",
-    "tape": "~3.5.0",
-    "xtend": "~4.0.0"
+    "after": "~0.8.1",
+    "faucet": "~0.0.1",
+    "tape": "~3.5.0"
   }
 }
