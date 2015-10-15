@@ -77,6 +77,12 @@ Same as  `jsonist.post()` but for when that extra character is too much to type 
 
 *Note: in each of the requests you can provide an optional `'hyperquest'` parameter in your options if you want to really customise the http chain (see [this](https://github.com/hyperquest))*
 
+### jsonist.delete(url, [ options, ] callback)
+
+Send a DELETE request to `url` and return the callback with an error or JSON deserialised data.
+
+Otherwise works the same as GET.
+
 ## License
 
 **jsonist** is Copyright (c) 2014 Rod Vagg [@rvagg](https://github.com/rvagg) and licensed under the MIT licence. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE file for more details.
