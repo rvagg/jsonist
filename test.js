@@ -37,47 +37,49 @@ function testServer (serverResponse) {
 }
 
 
-test('fetch json doc', function (t) {
-  t.plan(7)
+'get delete'.split(' ').forEach(function (type) {
+  test(type+' fetch json doc', function (t) {
+    t.plan(7)
 
-  var testDoc = { a: 'test', doc: true, arr: [ { of: 'things' } ] }
+    var testDoc = { a: 'test', doc: true, arr: [ { of: 'things' } ] }
 
-  testServer(stringify(testDoc))
-    .on('ready', function (url) {
-      jsonist.get(url, function (err, data, response) {
-        t.notOk(err, 'no error')
-        t.deepEqual(data, testDoc, 'got correct doc')
-        t.ok(response, 'got response object')
-        t.equal(
-            response && response.headers && response.headers['content-type']
-          , 'application/json', 'verified response object by content-type header'
-        )
+    testServer(stringify(testDoc))
+      .on('ready', function (url) {
+        jsonist[type](url, function (err, data, response) {
+          t.notOk(err, 'no error')
+          t.deepEqual(data, testDoc, 'got correct doc')
+          t.ok(response, 'got response object')
+          t.equal(
+              response && response.headers && response.headers['content-type']
+            , 'application/json', 'verified response object by content-type header'
+          )
+        })
       })
-    })
-    .on('request', function (req, data) {
-      t.equal(req.method, 'GET', 'got get request')
-      t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
-    })
-    .on('close', t.ok.bind(t, true, 'ended'))
-})
-
-test('fetch non-json doc', function (t) {
-  t.plan(7)
-
-  testServer('this is not json')
-    .on('ready', function (url) {
-      jsonist.get(url, function (err, data, response) {
-        t.ok(err, 'got error')
-        t.notOk(data, 'no data')
-        t.notOk(response, 'no response obj')
-        t.ok(/JSON/.test(err.message), 'error says something about "JSON"')
+      .on('request', function (req, data) {
+        t.equal(req.method, type.toUpperCase(), 'got ' + type + ' request')
+        t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
       })
-    })
-    .on('request', function (req, data) {
-      t.equal(req.method, 'GET', 'got get request')
-      t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
-    })
-    .on('close', t.ok.bind(t, true, 'ended'))
+      .on('close', t.ok.bind(t, true, 'ended'))
+  })
+
+  test(type+' fetch non-json doc', function (t) {
+    t.plan(7)
+
+    testServer('this is not json')
+      .on('ready', function (url) {
+        jsonist[type](url, function (err, data, response) {
+          t.ok(err, 'got error')
+          t.notOk(data, 'no data')
+          t.notOk(response, 'no response obj')
+          t.ok(/JSON/.test(err.message), 'error says something about "JSON"')
+        })
+      })
+      .on('request', function (req, data) {
+        t.equal(req.method, type.toUpperCase(), 'got ' + type + ' request')
+        t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
+      })
+      .on('close', t.ok.bind(t, true, 'ended'))
+  })
 })
 
 'post put'.split(' ').forEach(function (type) {
