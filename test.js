@@ -38,7 +38,7 @@ function testServer (serverResponse) {
 
 
 'get delete'.split(' ').forEach(function (type) {
-  test(type+' fetch json doc', function (t) {
+  test(type + ' fetch json doc', function (t) {
     t.plan(7)
 
     var testDoc = { a: 'test', doc: true, arr: [ { of: 'things' } ] }
@@ -62,7 +62,7 @@ function testServer (serverResponse) {
       .on('close', t.ok.bind(t, true, 'ended'))
   })
 
-  test(type+' fetch non-json doc', function (t) {
+  test(type + ' fetch non-json doc', function (t) {
     t.plan(7)
 
     testServer('this is not json')

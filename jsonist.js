@@ -105,7 +105,7 @@ function isRedirect (request, response) {
 }
 
 
-module.exports.get  = makeMethod('GET'  , false)
-module.exports.post = makeMethod('POST' , true)
-module.exports.put  = makeMethod('PUT'  , true)
-module.exports.delete  = makeMethod('DELETE'  , false)
+module.exports.get    = makeMethod('GET'    , false)
+module.exports.post   = makeMethod('POST'   , true)
+module.exports.put    = makeMethod('PUT'    , true)
+module.exports.delete = makeMethod('DELETE' , false)
