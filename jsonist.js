@@ -121,5 +121,9 @@ function isRedirect (request, response) {
 module.exports.get       = makeMethod('GET'    , false)
 module.exports.post      = makeMethod('POST'   , true)
 module.exports.put       = makeMethod('PUT'    , true)
-module.exports.delete    = makeMethod('DELETE' , false)
+module.exports.delete    = function deleteHandler (uri, options, callback) {
+  // behaves half-way between a data posting request and a GET
+  // since https://github.com/substack/hyperquest/commit/9b130e101
+  return makeMethod('DELETE', false)(uri, options, callback).end()
+}
 module.exports.HttpError = HttpError
