@@ -61,16 +61,16 @@ function makeMethod (method, data) {
     } else
       options = xtend(options, {})
 
-    if (!options.method)
+    if (typeof options.method != 'string')
       options.method = method
 
-    if (!options.headers)
+    if (typeof options.headers != 'object')
       options.headers = {}
 
-    if (data && !options.headers['content-type'])
+    if (data && typeof options.headers['content-type'] != 'string')
       options.headers['content-type'] = 'application/json'
 
-    if (!options.headers['accept'])
+    if (typeof options.headers['accept'] != 'string')
       options.headers['accept'] = 'application/json'
 
     return collector(uri, options, callback)
