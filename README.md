@@ -83,6 +83,18 @@ Send a DELETE request to `url` and return the callback with an error or JSON des
 
 Otherwise works the same as GET.
 
+## Error handling and bad JSON responses
+
+Server errors (i.e. response codes >= 300) are handled as standard responses. You can get the status code from the response object which is the third argument to the standard callback if you need to handle error responses in a different way.
+
+However, if any type of response returns data that is not JSON format, an error will be generated and passed as the first argument on the callback, with the following customisations:
+
+* If the status code from the server is >= 300, you will receive an error of type `jsonist.HttpError`, otherwise it will be of type `SyntaxError` indicating a bad JSON parse on a normal response.
+* The error will come with the following additional properties attached:
+  - `data`: a `Buffer` containing the full response from the server
+  - `response`: the full HTTP response object
+  - `statusCode`: the status code received from the server (a short-cut to `response.statusCode`)
+
 ## License
 
 **jsonist** is Copyright (c) 2014 Rod Vagg [@rvagg](https://github.com/rvagg) and licensed under the MIT licence. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE file for more details.

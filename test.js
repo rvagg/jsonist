@@ -9,7 +9,7 @@ const test      = require('tape')
     , after     = require('after')
 
 
-function testServer (serverResponse) {
+function testServer (serverResponse, statusCode) {
   var ee     = new EE()
     , server = http.createServer(handler)
 
@@ -23,7 +23,10 @@ function testServer (serverResponse) {
       setTimeout(server.close.bind(server), 20)
     }))
 
-    res.writeHead(200, { 'content-type': 'application/json' })
+    res.writeHead(
+        typeof statusCode == 'number' ? statusCode : 200
+      , { 'content-type': 'application/json' }
+    )
     res.end(serverResponse || '')
   }
 
@@ -311,4 +314,52 @@ test('follow redirect limit', function (t) {
       done()
     })
   })
+})
+
+
+test('server error, non-JSON', function (t) {
+  t.plan(7)
+
+  var responseText = 'there was an error'
+
+  testServer(responseText, 501)
+    .on('ready', function (url) {
+      jsonist.get(url, function (err, data, response) {
+        t.ok(err)
+        t.ok(err instanceof jsonist.HttpError)
+        t.equal(err.data.toString(), responseText, 'got correct response')
+        t.equal(err.statusCode, 501, 'got correct statusCode')
+      })
+    })
+    .on('request', function (req, data) {
+      t.equal(req.method, 'GET', 'got GET request')
+      t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
+    })
+    .on('close', t.ok.bind(t, true, 'ended'))
+})
+
+
+test('server error, with-JSON', function (t) {
+  t.plan(8)
+
+  var responseDoc = 'there was an error'
+
+  testServer(stringify(responseDoc), 501)
+    .on('ready', function (url) {
+      jsonist.get(url, function (err, data, response) {
+        t.notOk(err, 'no error')
+        t.deepEqual(data, responseDoc, 'got correct doc')
+        t.ok(response, 'got response object')
+        t.equal(response.statusCode, 501, 'got correct status code')
+        t.equal(
+            response && response.headers && response.headers['content-type']
+          , 'application/json', 'verified response object by content-type header'
+        )
+      })
+    })
+    .on('request', function (req, data) {
+      t.equal(req.method, 'GET', 'got GET request')
+      t.equal(req.headers['accept'], 'application/json', 'got correct accept header')
+    })
+    .on('close', t.ok.bind(t, true, 'ended'))
 })

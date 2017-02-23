@@ -5,14 +5,12 @@ var url         = require('url')
   , xtend       = require('xtend')
 
 
-function HttpError (status, response) {
-    Error.call(this)
-    this.status = status
-    this.response = response
+function HttpError (message) {
+    SyntaxError.call(this, message)
     Error.captureStackTrace(this, arguments.callee)
 }
 
-HttpError.prototype = Object.create(Error.prototype)
+HttpError.prototype = Object.create(SyntaxError.prototype)
 HttpError.prototype.constructor = HttpError
 
 
@@ -45,20 +43,17 @@ function collector (uri, options, callback) {
       if (!data.length)
         return callback(null, null, request.response)
 
-      var ret
+      var ret, msg
 
       try {
         ret = JSON.parse(data.toString())
       } catch (e) {
-        if (request.response.statusCode >= 300) {
-          err = new HttpError(request.response.statusCode, request.response)
-        } else {
-          err = new SyntaxError('JSON parse error: ' + e.message, e)
-          err.statusCode = request.response.statusCode
-          err.data = data
-          err.response = request.response
-          return callback(err2)
-        }
+        msg = 'JSON parse error: ' + e.message
+        err = request.response.statusCode >= 300 ? new HttpError(msg) : new SyntaxError(msg)
+
+        err.statusCode = request.response.statusCode
+        err.data = data
+        err.response = request.response
 
         return callback(err);
       }
@@ -123,8 +118,8 @@ function isRedirect (request, response) {
 }
 
 
-module.exports.get    = makeMethod('GET'    , false)
-module.exports.post   = makeMethod('POST'   , true)
-module.exports.put    = makeMethod('PUT'    , true)
-module.exports.delete = makeMethod('DELETE' , false)
+module.exports.get       = makeMethod('GET'    , false)
+module.exports.post      = makeMethod('POST'   , true)
+module.exports.put       = makeMethod('PUT'    , true)
+module.exports.delete    = makeMethod('DELETE' , false)
 module.exports.HttpError = HttpError
