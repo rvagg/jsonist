@@ -1,49 +1,49 @@
-var url         = require('url')
-  , hyperquest  = require('hyperquest')
-  , bl          = require('bl')
-  , stringify   = require('json-stringify-safe')
-  , xtend       = require('xtend')
-
+const url = require('url')
+const hyperquest = require('hyperquest')
+const bl = require('bl')
+const stringify = require('json-stringify-safe')
 
 function HttpError (message) {
-    SyntaxError.call(this, message)
-    Error.captureStackTrace(this, arguments.callee)
+  SyntaxError.call(this, message)
+  Error.captureStackTrace(this, arguments.callee)
 }
 
 HttpError.prototype = Object.create(SyntaxError.prototype)
 HttpError.prototype.constructor = HttpError
 
-
 function collector (uri, options, callback) {
-  var request       = makeRequest(uri, options)
-    , redirect      = null
-    , redirectCount = 0
+  let request = makeRequest(uri, options)
+  let redirect = null
+  let redirectCount = 0
 
   return handle(request)
 
   function handle (request) {
     if (options.followRedirects) {
-      request.on('response', function (response) {
+      request.on('response', (response) => {
         redirect = isRedirect(request.request, response) && response.headers.location
       })
     }
 
-    request.pipe(bl(function (err, data) {
+    request.pipe(bl((err, data) => {
       if (redirect) {
-        if (++redirectCount >= (typeof options.followRedirects == 'number' ? options.followRedirects : 10))
+        if (++redirectCount >= (typeof options.followRedirects === 'number' ? options.followRedirects : 10)) {
           return callback(new Error('Response was redirected too many times (' + redirectCount + ')'))
+        }
         request = makeRequest(url.resolve(uri, redirect), options)
         redirect = null
         return handle(request)
       }
 
-      if (err)
+      if (err) {
         return callback(err)
+      }
 
-      if (!data.length)
+      if (!data.length) {
         return callback(null, null, request.response)
+      }
 
-      var ret, msg
+      let ret, msg
 
       try {
         ret = JSON.parse(data.toString())
@@ -55,7 +55,7 @@ function collector (uri, options, callback) {
         err.data = data
         err.response = request.response
 
-        return callback(err);
+        return callback(err)
       }
 
       callback(null, ret, request.response)
@@ -65,63 +65,59 @@ function collector (uri, options, callback) {
   }
 }
 
-
 function makeMethod (method, data) {
   function handler (uri, options, callback) {
-    if (typeof options == 'function') {
+    let defaultOptions = { method, headers: {} }
+    if (typeof options === 'object') {
+      options = Object.assign(defaultOptions, options)
+    } else {
       callback = options
-      options = {}
-    } else
-      options = xtend(options, {})
+      options = defaultOptions
+    }
 
-    if (typeof options.method != 'string')
-      options.method = method
-
-    if (typeof options.headers != 'object')
-      options.headers = {}
-
-    if (data && typeof options.headers['content-type'] != 'string')
+    if (data && typeof options.headers['content-type'] !== 'string') {
       options.headers['content-type'] = 'application/json'
-
-    if (typeof options.headers['accept'] != 'string')
+    }
+    if (typeof options.headers['accept'] !== 'string') {
       options.headers['accept'] = 'application/json'
+    }
 
     return collector(uri, options, callback)
   }
 
   function dataHandler (uri, data, options, callback) {
-    var request = handler(uri, options, callback)
-    if (typeof data.pipe == 'function')
+    let request = handler(uri, options, callback)
+
+    if (typeof data.pipe === 'function') {
       data.pipe(request)
-    else
+    } else {
       request.end(stringify(data))
+    }
+
     return request
   }
 
   return data ? dataHandler : handler
 }
 
-
 function makeRequest (uri, options) {
   return (options.hyperquest || hyperquest)(uri, options)
 }
 
-
 function isRedirect (request, response) {
   return request.method === 'GET' &&
-         response.headers.location &&
-         (    response.statusCode === 301
-           || response.statusCode === 302
-           || response.statusCode === 307
-           || response.statusCode === 308
-         )
+    response.headers.location &&
+    (response.statusCode === 301 ||
+      response.statusCode === 302 ||
+      response.statusCode === 307 ||
+      response.statusCode === 308
+    )
 }
 
-
-module.exports.get       = makeMethod('GET'    , false)
-module.exports.post      = makeMethod('POST'   , true)
-module.exports.put       = makeMethod('PUT'    , true)
-module.exports.delete    = function deleteHandler (uri, options, callback) {
+module.exports.get = makeMethod('GET', false)
+module.exports.post = makeMethod('POST', true)
+module.exports.put = makeMethod('PUT', true)
+module.exports.delete = function deleteHandler (uri, options, callback) {
   // behaves half-way between a data posting request and a GET
   // since https://github.com/substack/hyperquest/commit/9b130e101
   return makeMethod('DELETE', false)(uri, options, callback).end()

@@ -61,6 +61,8 @@ The `options` object is optional and is passed on to hyperquest. One option is o
 
 The callback is called with up to 3 arguments. If there is an error there will only be an error argument in the first position, otherwise it will be `null`. The second argument will contain the deserialised object obtained from the server and the third argument will be the response object itself if you need to fetch headers or other metadata.
 
+**Returns** the underlying hyperquest stream for this request. Can be safely ignored in most circumstances.
+
 ### jsonist.post(url, data, [ options, ] callback)
 
 Send a POST request to `url`, writing JSON serialised data to the request, and return the callback with an error or JSON deserialised data (if any).
@@ -71,17 +73,23 @@ The `data` parameter can also be a readable stream that will get `.pipe()`'d to 
 
 The `options` object is optional and is passed on to hyperquest.
 
+**Returns** the underlying hyperquest stream for this request. Can be safely ignored in most circumstances.
+
 ### jsonist.put(url, data, [ options, ] callback)
 
 Same as  `jsonist.post()` but for when that extra character is too much to type or you have to use someone's overloaded API. `'method'` is set to `'PUT'`.
 
 *Note: in each of the requests you can provide an optional `'hyperquest'` parameter in your options if you want to really customise the http chain (see [this](https://github.com/hyperquest))*
 
+**Returns** the underlying hyperquest stream for this request. Can be safely ignored in most circumstances.
+
 ### jsonist.delete(url, [ options, ] callback)
 
 Send a DELETE request to `url` and return the callback with an error or JSON deserialised data.
 
 Otherwise works the same as GET.
+
+**Returns** the underlying hyperquest stream for this request. Can be safely ignored in most circumstances.
 
 ## Error handling and bad JSON responses
 
