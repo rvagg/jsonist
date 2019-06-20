@@ -12,9 +12,9 @@ HttpError.prototype = Object.create(SyntaxError.prototype)
 HttpError.prototype.constructor = HttpError
 
 function collector (uri, options, callback) {
-  let request = makeRequest(uri, options)
-  let redirect = null
-  let redirectCount = 0
+  var request = makeRequest(uri, options)
+  var redirect = null
+  var redirectCount = 0
 
   return handle(request)
 
@@ -43,7 +43,7 @@ function collector (uri, options, callback) {
         return callback(null, null, request.response)
       }
 
-      let ret, msg
+      var ret, msg
 
       try {
         ret = JSON.parse(data.toString())
@@ -67,7 +67,7 @@ function collector (uri, options, callback) {
 
 function makeMethod (method, data) {
   function handler (uri, options, callback) {
-    let defaultOptions = { method, headers: {} }
+    var defaultOptions = { method, headers: {} }
     if (typeof options === 'object') {
       options = Object.assign(defaultOptions, options)
     } else {
@@ -86,7 +86,7 @@ function makeMethod (method, data) {
   }
 
   function dataHandler (uri, data, options, callback) {
-    let request = handler(uri, options, callback)
+    var request = handler(uri, options, callback)
 
     if (typeof data.pipe === 'function') {
       data.pipe(request)
