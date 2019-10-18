@@ -1,20 +1,20 @@
-const url = require('url')
+const URL = require('url').URL
 const hyperquest = require('hyperquest')
 const bl = require('bl')
 const stringify = require('json-stringify-safe')
 
 function HttpError (message) {
   SyntaxError.call(this, message)
-  Error.captureStackTrace(this, arguments.callee)
+  Error.captureStackTrace(this, arguments.callee) // eslint-disable-line
 }
 
 HttpError.prototype = Object.create(SyntaxError.prototype)
 HttpError.prototype.constructor = HttpError
 
 function collector (uri, options, callback) {
-  var request = makeRequest(uri, options)
-  var redirect = null
-  var redirectCount = 0
+  const request = makeRequest(uri, options)
+  let redirect = null
+  let redirectCount = 0
 
   return handle(request)
 
@@ -30,7 +30,7 @@ function collector (uri, options, callback) {
         if (++redirectCount >= (typeof options.followRedirects === 'number' ? options.followRedirects : 10)) {
           return callback(new Error('Response was redirected too many times (' + redirectCount + ')'))
         }
-        request = makeRequest(url.resolve(uri, redirect), options)
+        request = makeRequest(new URL(redirect, uri).toString(), options)
         redirect = null
         return handle(request)
       }
@@ -43,7 +43,7 @@ function collector (uri, options, callback) {
         return callback(null, null, request.response)
       }
 
-      var ret, msg
+      let ret, msg
 
       try {
         ret = JSON.parse(data.toString())
@@ -67,7 +67,7 @@ function collector (uri, options, callback) {
 
 function makeMethod (method, data) {
   function handler (uri, options, callback) {
-    var defaultOptions = { method, headers: {} }
+    const defaultOptions = { method, headers: {} }
     if (typeof options === 'object') {
       options = Object.assign(defaultOptions, options)
     } else {
@@ -78,15 +78,15 @@ function makeMethod (method, data) {
     if (data && typeof options.headers['content-type'] !== 'string') {
       options.headers['content-type'] = 'application/json'
     }
-    if (typeof options.headers['accept'] !== 'string') {
-      options.headers['accept'] = 'application/json'
+    if (typeof options.headers.accept !== 'string') {
+      options.headers.accept = 'application/json'
     }
 
     return collector(uri, options, callback)
   }
 
   function dataHandler (uri, data, options, callback) {
-    var request = handler(uri, options, callback)
+    const request = handler(uri, options, callback)
 
     if (typeof data.pipe === 'function') {
       data.pipe(request)
@@ -114,12 +114,29 @@ function isRedirect (request, response) {
     )
 }
 
-module.exports.get = makeMethod('GET', false)
-module.exports.post = makeMethod('POST', true)
-module.exports.put = makeMethod('PUT', true)
-module.exports.delete = function deleteHandler (uri, options, callback) {
+function maybePromisify (fn) {
+  return function jsonistMaybePromise (...args) {
+    if (typeof args[args.length - 1] !== 'function') { // no callback
+      return new Promise((resolve, reject) => {
+        this.request = fn.call(this, ...args, (err, data, response) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve({ data, response })
+        })
+      })
+    } else {
+      return fn.call(this, ...args)
+    }
+  }
+}
+
+module.exports.get = maybePromisify(makeMethod('GET', false))
+module.exports.post = maybePromisify(makeMethod('POST', true))
+module.exports.put = maybePromisify(makeMethod('PUT', true))
+module.exports.delete = maybePromisify(function deleteHandler (uri, options, callback) {
   // behaves half-way between a data posting request and a GET
   // since https://github.com/substack/hyperquest/commit/9b130e101
   return makeMethod('DELETE', false)(uri, options, callback).end()
-}
+})
 module.exports.HttpError = HttpError
