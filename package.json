@@ -1,6 +1,6 @@
 {
   "name": "jsonist",
-  "version": "2.1.2",
+  "version": "3.0.0",
   "description": "A simple wrapper around for dealing with JSON web APIs",
   "main": "jsonist.js",
   "scripts": {
