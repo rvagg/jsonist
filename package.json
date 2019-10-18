@@ -5,6 +5,7 @@
   "main": "jsonist.js",
   "scripts": {
     "lint": "standard *.js",
+    "ci": "npm run lint && node test.js",
     "test": "npm run lint && node test.js | faucet"
   },
   "repository": {
